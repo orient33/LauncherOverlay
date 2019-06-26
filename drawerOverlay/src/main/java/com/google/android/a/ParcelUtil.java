@@ -6,10 +6,10 @@ import android.os.Parcelable;
 import android.os.Parcelable.Creator;
 import java.util.HashMap;
 
-public class c {
-    public static final ClassLoader bHi = c.class.getClassLoader();
+public class ParcelUtil {
+    public static final ClassLoader bHi = ParcelUtil.class.getClassLoader();
 
-    private c() {
+    private ParcelUtil() {
     }
 
     public static boolean a(Parcel parcel) {
@@ -20,7 +20,7 @@ public class c {
         parcel.writeInt(z ? 1 : 0);
     }
 
-    public static Parcelable a(Parcel parcel, Creator creator) {
+    public static Parcelable readLayoutParams(Parcel parcel, Creator creator) {
         if (parcel.readInt() == 0) {
             return null;
         }

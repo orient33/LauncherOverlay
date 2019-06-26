@@ -12,7 +12,8 @@ import com.google.android.libraries.launcherclient.LauncherClient;
 import com.google.android.libraries.launcherclient.LauncherClientCallbacksAdapter;
 import com.google.android.libraries.launcherclient.WorkspaceOverlayCallbacks;
 
-public class MainActivity extends AppCompatActivity implements WorkspaceOverlayCallbacks {
+public class HomeActivity extends AppCompatActivity implements WorkspaceOverlayCallbacks {
+    private static final String TAG = HomeActivity.class.getSimpleName();
     private LauncherClient launcherClient;
     private ViewPager viewPager;
 
@@ -22,7 +23,8 @@ public class MainActivity extends AppCompatActivity implements WorkspaceOverlayC
         setContentView(R.layout.activity_main);
 
         CallbacksAdapter callbacksAdapter = new CallbacksAdapter(this);
-        launcherClient = new LauncherClient(this, callbacksAdapter, "io.fabianterhorst.server", true);
+        launcherClient = new LauncherClient(this, callbacksAdapter,
+                "io.fabianterhorst.server", true);
 //        launcherClient = new LauncherClient(this, callbacksAdapter,  true);
 
         viewPager = findViewById(R.id.viewpager);
@@ -34,17 +36,17 @@ public class MainActivity extends AppCompatActivity implements WorkspaceOverlayC
                 if (position == 0) {
                     launcherClient.updateMove(1f - positionOffset);
                 }
-                Log.d("LWQ", "onPageScrolled:" + position + ";Offset:" + positionOffset + ";Pixels:" + positionOffsetPixels);
+                Log.d(TAG, "onPageScrolled:" + position + ";Offset:" + positionOffset + ";Pixels:" + positionOffsetPixels);
             }
 
             @Override
             public void onPageSelected(int position) {
-                Log.d("LWQ", "onPageSelected" + position);
+                Log.d(TAG, "onPageSelected" + position);
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                Log.d("LWQ", "onPageScrollStateChanged:position" + state);
+                Log.d(TAG, "onPageScrollStateChanged:position" + state);
                 switch (state) {
                     case ViewPager.SCROLL_STATE_IDLE:
                         launcherClient.endMove();

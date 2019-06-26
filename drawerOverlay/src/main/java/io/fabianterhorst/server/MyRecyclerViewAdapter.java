@@ -7,30 +7,26 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-/**
- * Created by 青青-子衿 on 2018/1/15.
- */
-
-
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
-    private List<String> list;
+    private final List<String> list;
 
     public MyRecyclerViewAdapter(List<String> list) {
         this.list = list;
     }
 
+    @NonNull
     @Override
-    public MyRecyclerViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public MyRecyclerViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_normal, parent, false);
-        ViewHolder viewHolder = new MyRecyclerViewAdapter.ViewHolder(view);
-        return viewHolder;
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MyRecyclerViewAdapter.ViewHolder holder, int position) {
-        holder.mText.setText(list.get(position));
+    public void onBindViewHolder(@NonNull MyRecyclerViewAdapter.ViewHolder holder, int position) {
+        holder.textView.setText(list.get(position));
     }
 
     @Override
@@ -39,11 +35,11 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView mText;
+        TextView textView;
 
         ViewHolder(View itemView) {
             super(itemView);
-            mText = itemView.findViewById(R.id.item_tx);
+            textView = itemView.findViewById(R.id.item_tx);
         }
     }
 }

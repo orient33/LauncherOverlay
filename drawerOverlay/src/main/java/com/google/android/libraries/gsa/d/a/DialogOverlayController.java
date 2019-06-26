@@ -22,7 +22,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import java.util.HashSet;
 
-public class DialogOverlayController extends ContextThemeWrapper implements Callback, DialogListeners {
+public class DialogOverlayController extends ContextThemeWrapper implements Callback {
 
     public WindowManager windowManager;
     public final Window window;
@@ -56,19 +56,19 @@ public class DialogOverlayController extends ContextThemeWrapper implements Call
     }
 
     public boolean dispatchKeyShortcutEvent(KeyEvent keyEvent) {
-        return this.window.superDispatchKeyShortcutEvent(keyEvent);
+        return window.superDispatchKeyShortcutEvent(keyEvent);
     }
 
     public boolean dispatchTouchEvent(MotionEvent motionEvent) {
-        return this.window.superDispatchTouchEvent(motionEvent);
+        return window.superDispatchTouchEvent(motionEvent);
     }
 
     public boolean dispatchTrackballEvent(MotionEvent motionEvent) {
-        return this.window.superDispatchTrackballEvent(motionEvent);
+        return window.superDispatchTrackballEvent(motionEvent);
     }
 
     public boolean dispatchGenericMotionEvent(MotionEvent motionEvent) {
-        return this.window.superDispatchGenericMotionEvent(motionEvent);
+        return window.superDispatchGenericMotionEvent(motionEvent);
     }
 
     public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
@@ -139,11 +139,11 @@ public class DialogOverlayController extends ContextThemeWrapper implements Call
     }
 
     public void startActivity(Intent intent) {
-        super.startActivity(intent.addFlags(268435456));
+        super.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
     public void startActivity(Intent intent, Bundle bundle) {
-        super.startActivity(intent.addFlags(268435456), bundle);
+        super.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), bundle);
     }
 
     public void onShow(DialogInterface dialogInterface) {
@@ -154,7 +154,7 @@ public class DialogOverlayController extends ContextThemeWrapper implements Call
         this.dialogs.remove(dialogInterface);
     }
 
-    public final void cnB() {
+    public final void dismiss() {
         if (!this.dialogs.isEmpty()) {
             Dialog[] dialogArr = (Dialog[]) this.dialogs.toArray(new Dialog[this.dialogs.size()]);
             this.dialogs.clear();

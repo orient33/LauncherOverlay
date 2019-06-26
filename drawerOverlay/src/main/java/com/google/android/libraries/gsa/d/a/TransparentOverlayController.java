@@ -23,7 +23,7 @@ final class TransparentOverlayController implements t {
     }
 
     public final void open() {
-        this.overlayController.setVisible(true);
+        this.overlayController.setTouchable(true);
         OverlayController overlayControllerVar = this.overlayController;
         LayoutParams attributes = overlayControllerVar.window.getAttributes();
         if (Build.VERSION.SDK_INT >= 26) {
@@ -61,7 +61,7 @@ final class TransparentOverlayController implements t {
             overlayControllerVar.unZ = false;
             overlayControllerVar.window.setAttributes(attributes);
         }
-        this.overlayController.setVisible(false);
+        this.overlayController.setTouchable(false);
         overlayControllerVar = this.overlayController;
         PanelState panelStateVar = PanelState.CLOSED;//Todo: PanelState.uoe was default
         if (overlayControllerVar.panelState != panelStateVar) {
@@ -71,7 +71,7 @@ final class TransparentOverlayController implements t {
         this.overlayController.slidingPanelLayout.uoH = this.overlayController.overlayControllerStateChanger;
     }
 
-    public final void D(float f) {
+    public final void overlayScrollChanged(float f) {
     }
 
     public final boolean cnI() {

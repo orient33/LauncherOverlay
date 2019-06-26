@@ -15,19 +15,19 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 
 public abstract class OverlaysController {
-
+    private static final String TAG = "OverlaysController";
     private final Service service;
     private final SparseArray<OverlayControllerBinder> clients = new SparseArray<>();
-    public final Handler handler = new Handler();
+    final Handler handler = new Handler();
 
     public OverlaysController(Service service) {
         this.service = service;
     }
 
-    public abstract OverlayController createController(Configuration configuration, int i, int i2);
+    public abstract OverlayController createController(Configuration configuration, int serviceVersion, int clientVer);
 
     public final synchronized IBinder onBind(Intent intent) {
-        Log.e("LWQ", "onBind");
+        Log.e(TAG, "onBind");
         OverlayControllerBinder iBinder;
         int i = Integer.MAX_VALUE;
         synchronized (this) {
@@ -38,29 +38,29 @@ public abstract class OverlaysController {
             } else {
                 int parseInt;
                 if (port != Binder.getCallingUid()) {
-                    Log.e("OverlaySController", "Calling with an invalid UID, the interface will not work");
+                    Log.e(TAG, "Calling with an invalid UID, the interface will not work");
                 }
                 try {
                     parseInt = Integer.parseInt(data.getQueryParameter("v"));
                 } catch (Exception e) {
-                    Log.e("OverlaySController", "Failed parsing server version");
+                    Log.e(TAG, "Failed parsing server version");
                     parseInt = i;
                 }
                 try {
                     i = Integer.parseInt(data.getQueryParameter("cv"));
                 } catch (Exception e2) {
-                    Log.d("OverlaySController", "Client version not available");
+                    Log.d(TAG, "Client version not available");
                 }
                 String[] packagesForUid = this.service.getPackageManager().getPackagesForUid(port);
                 String host = data.getHost();
                 if (packagesForUid == null || !Arrays.asList(packagesForUid).contains(host)) {
-                    Log.e("OverlaySController", "Invalid uid or package");
+                    Log.e(TAG, "Invalid uid or package");
                     iBinder = null;
                 } else {
                     try {
                         int i2 = this.service.getPackageManager().getApplicationInfo(host, 0).flags;
                         if ((i2 & 1) == 0 && (i2 & 2) == 0) {
-                            Log.e("OverlaySController", "Only system apps are allowed to connect");
+                            Log.e(TAG, "Only system apps are allowed to connect");
                             iBinder = null;
                         } else {
                             iBinder = this.clients.get(port);
@@ -74,7 +74,7 @@ public abstract class OverlaysController {
                             }
                         }
                     } catch (NameNotFoundException e3) {
-                        Log.e("OverlaySController", "Invalid caller package");
+                        Log.e(TAG, "Invalid caller package");
                         iBinder = null;
                     }
                 }
@@ -86,11 +86,11 @@ public abstract class OverlaysController {
     public final synchronized void unUnbind(Intent intent) {
         int port = intent.getData().getPort();
         if (port != -1) {
-            OverlayControllerBinder overlayControllerBinderVar = this.clients.get(port);
-            if (overlayControllerBinderVar != null) {
-                overlayControllerBinderVar.destroy();
+            OverlayControllerBinder binder = clients.get(port);
+            if (binder != null) {
+                binder.destroy();
             }
-            this.clients.remove(port);
+            clients.remove(port);
         }
     }
 
@@ -101,13 +101,13 @@ public abstract class OverlaysController {
             if (overlayControllerBinderVar != null) {
                 printWriter.println("  dump of client " + size);
                 String str = "    ";
-                printWriter.println(new StringBuilder(String.valueOf(str).length() + 23).append(str).append("mCallerUid: ").append(overlayControllerBinderVar.mCallerUid).toString());
-                printWriter.println(new StringBuilder(String.valueOf(str).length() + 27).append(str).append("mServerVersion: ").append(overlayControllerBinderVar.mServerVersion).toString());
-                printWriter.println(new StringBuilder(String.valueOf(str).length() + 27).append(str).append("mClientVersion: ").append(overlayControllerBinderVar.mClientVersion).toString());
+                printWriter.println(str + "mCallerUid: " + overlayControllerBinderVar.mCallerUid);
+                printWriter.println(str + "mServerVersion: " + overlayControllerBinderVar.mServerVersion);
+                printWriter.println(str + "mClientVersion: " + overlayControllerBinderVar.mClientVersion);
                 String str2 = overlayControllerBinderVar.mPackageName;
-                printWriter.println(new StringBuilder((String.valueOf(str).length() + 14) + String.valueOf(str2).length()).append(str).append("mPackageName: ").append(str2).toString());
-                printWriter.println(new StringBuilder(String.valueOf(str).length() + 21).append(str).append("mOptions: ").append(overlayControllerBinderVar.mOptions).toString());
-                printWriter.println(new StringBuilder(String.valueOf(str).length() + 30).append(str).append("mLastAttachWasLandscape: ").append(overlayControllerBinderVar.mLastAttachWasLandscape).toString());
+                printWriter.println(str + "mPackageName: " + str2);
+                printWriter.println(str + "mOptions: " + overlayControllerBinderVar.mOptions);
+                printWriter.println(str + "mLastAttachWasLandscape: " + overlayControllerBinderVar.mLastAttachWasLandscape);
                 BaseCallback baseCallbackVar = overlayControllerBinderVar.baseCallback;
                 if (baseCallbackVar != null) {
                     baseCallbackVar.dump(printWriter, str);
@@ -133,7 +133,7 @@ public abstract class OverlaysController {
     }
 
     //Todo: maybe remove
-    public int Hx() {
+    public int flag() {
         return 24;
     }
 }

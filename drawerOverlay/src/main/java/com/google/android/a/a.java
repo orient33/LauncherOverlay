@@ -6,8 +6,8 @@ import android.os.Parcel;
 import android.os.RemoteException;
 
 public class a implements IInterface {
-    public final String bHh;
-    public final IBinder binder;
+    private final String bHh;
+    private final IBinder binder;
 
     public a(IBinder iBinder, String str) {
         this.binder = iBinder;
@@ -18,7 +18,7 @@ public class a implements IInterface {
         return this.binder;
     }
 
-    public final Parcel pg() {
+    protected final Parcel getParcelWithIT() {
         Parcel obtain = Parcel.obtain();
         obtain.writeInterfaceToken(this.bHh);
         return obtain;
@@ -44,9 +44,9 @@ public class a implements IInterface {
     }
 
 /*
-Method generation error in method: com.google.android.a.a.a(int, android.os.Parcel):android.os.Parcel
+Method generation error in method: com.google.android.readLayoutParams.readLayoutParams.readLayoutParams(int, android.os.Parcel):android.os.Parcel
 jadx.core.utils.exceptions.CodegenException: Error generate insn: 0x0017: INVOKE  (wrap: android.os.Parcel
-  ?: MERGE  (r5_1 android.os.Parcel) = (r5_0 'parcel' android.os.Parcel), (r1_0 'obtain' android.os.Parcel)) android.os.Parcel.recycle():void type: VIRTUAL in method: com.google.android.a.a.a(int, android.os.Parcel):android.os.Parcel
+  ?: MERGE  (r5_1 android.os.Parcel) = (r5_0 'parcel' android.os.Parcel), (r1_0 'obtain' android.os.Parcel)) android.os.Parcel.recycle():void type: VIRTUAL in method: com.google.android.readLayoutParams.readLayoutParams.readLayoutParams(int, android.os.Parcel):android.os.Parcel
 	at jadx.core.codegen.InsnGen.makeInsn(InsnGen.java:226)
 	at jadx.core.codegen.InsnGen.makeInsn(InsnGen.java:203)
 	at jadx.core.codegen.RegionGen.makeSimpleBlock(RegionGen.java:100)
@@ -68,7 +68,7 @@ jadx.core.utils.exceptions.CodegenException: Error generate insn: 0x0017: INVOKE
 	at jadx.core.ProcessClass.process(ProcessClass.java:43)
 	at jadx.api.JadxDecompiler.processClass(JadxDecompiler.java:306)
 	at jadx.api.JavaClass.decompile(JavaClass.java:62)
-Caused by: jadx.core.utils.exceptions.CodegenException: Error generate insn: ?: MERGE  (r5_1 android.os.Parcel) = (r5_0 'parcel' android.os.Parcel), (r1_0 'obtain' android.os.Parcel) in method: com.google.android.a.a.a(int, android.os.Parcel):android.os.Parcel
+Caused by: jadx.core.utils.exceptions.CodegenException: Error generate insn: ?: MERGE  (r5_1 android.os.Parcel) = (r5_0 'parcel' android.os.Parcel), (r1_0 'obtain' android.os.Parcel) in method: com.google.android.readLayoutParams.readLayoutParams.readLayoutParams(int, android.os.Parcel):android.os.Parcel
 	at jadx.core.codegen.InsnGen.makeInsn(InsnGen.java:226)
 	at jadx.core.codegen.InsnGen.addArg(InsnGen.java:101)
 	at jadx.core.codegen.InsnGen.addArgDot(InsnGen.java:84)
@@ -99,7 +99,7 @@ Caused by: jadx.core.utils.exceptions.CodegenException: MERGE can be used only i
     }
 
     //Todo: different from source
-    public final void c(int i, Parcel parcel) {
+    public final void reply(int i, Parcel parcel) {
         try {
             this.binder.transact(i, parcel, null, 1);
         } catch (RemoteException e) {

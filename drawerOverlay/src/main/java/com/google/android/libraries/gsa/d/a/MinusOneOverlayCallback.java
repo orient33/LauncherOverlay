@@ -3,21 +3,31 @@ package com.google.android.libraries.gsa.d.a;
 import android.content.res.Configuration;
 import android.os.Message;
 
-import com.google.android.libraries.material.progress.u;
+import com.google.android.C;
 
 import java.io.PrintWriter;
+
+import io.fabianterhorst.server.LogTool;
+
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_UP;
+import static com.google.android.C.MSG_END_SCROLL;
+import static com.google.android.C.MSG_ON_SCROLL;
+import static com.google.android.C.MSG_START_SCROLL;
 
 public final class MinusOneOverlayCallback extends OverlayControllerCallback {
 
     private final OverlaysController overlaysController;
 
-    public MinusOneOverlayCallback(OverlaysController overlaysControllerVar, OverlayControllerBinder overlayControllerBinderVar) {
-        super(overlayControllerBinderVar, 3);
-        this.overlaysController = overlaysControllerVar;
+    MinusOneOverlayCallback(OverlaysController overlaysControllerVar, OverlayControllerBinder overlayControllerBinderVar) {
+        super(overlayControllerBinderVar, C.Callback_Minus);
+        overlaysController = overlaysControllerVar;
     }
 
     final OverlayController createController(Configuration configuration) {
-        return this.overlaysController.createController(configuration, this.overlayControllerBinder.mServerVersion, this.overlayControllerBinder.mClientVersion);
+        return overlaysController.createController(configuration, overlayControllerBinder.mServerVersion,
+                overlayControllerBinder.mClientVersion);
     }
 
     public final void dump(PrintWriter printWriter, String str) {
@@ -32,41 +42,44 @@ public final class MinusOneOverlayCallback extends OverlayControllerCallback {
         OverlayController overlayControllerVar;
         long when;
         switch (message.what) {
-            case 3:
-                if (this.overlayController != null) {
-                    overlayControllerVar = this.overlayController;
+            case MSG_START_SCROLL:
+                if (overlayController != null) {
+                    overlayControllerVar = overlayController;
                     when = message.getWhen();
-                    if (!overlayControllerVar.cnD()) {
+                    if (!overlayControllerVar.isPanelOpen()) {
                         SlidingPanelLayout slidingPanelLayoutVar = overlayControllerVar.slidingPanelLayout;
-                        if (slidingPanelLayoutVar.uoC < slidingPanelLayoutVar.mTouchSlop) {
-                            overlayControllerVar.slidingPanelLayout.BM(0);
+                        if (slidingPanelLayoutVar.panelX < slidingPanelLayoutVar.mTouchSlop) {
+                            overlayControllerVar.slidingPanelLayout.setPanelX(0);
                             overlayControllerVar.mAcceptExternalMove = true;
-                            overlayControllerVar.unX = 0;
+                            overlayControllerVar.eventX = 0;
                             overlayControllerVar.slidingPanelLayout.mForceDrag = true;
-                            overlayControllerVar.obZ = when - 30;
-                            overlayControllerVar.b(0, overlayControllerVar.unX, overlayControllerVar.obZ);
-                            overlayControllerVar.b(2, overlayControllerVar.unX, when);
+                            overlayControllerVar.downTime = when - 30;
+                            LogTool.log("MinusOneOverlayCallback.msg.startScroll");
+                            overlayControllerVar.dispatchTouchEvent(ACTION_DOWN, overlayControllerVar.eventX, overlayControllerVar.downTime);
+                            overlayControllerVar.dispatchTouchEvent(ACTION_MOVE, overlayControllerVar.eventX, when);
                         }
                     }
                 }
                 return true;
-            case u.uKO /*4*/:
+            case MSG_ON_SCROLL /*4*/:
                 if (this.overlayController != null) {
                     overlayControllerVar = this.overlayController;
                     float floatValue = (float) message.obj;
                     when = message.getWhen();
                     if (overlayControllerVar.mAcceptExternalMove) {
-                        overlayControllerVar.unX = (int) (floatValue * ((float) overlayControllerVar.slidingPanelLayout.getMeasuredWidth()));
-                        overlayControllerVar.b(2, overlayControllerVar.unX, when);
+                        overlayControllerVar.eventX = (int) (floatValue * ((float) overlayControllerVar.slidingPanelLayout.getMeasuredWidth()));
+                        LogTool.log("MinusOneOverlayCallback.msg.onScroll. " + floatValue + ", px=" + overlayControllerVar.eventX);
+                        overlayControllerVar.dispatchTouchEvent(ACTION_MOVE, overlayControllerVar.eventX, when);
                     }
                 }
                 return true;
-            case u.uKS /*5*/:
-                if (this.overlayController != null) {
-                    overlayControllerVar = this.overlayController;
+            case MSG_END_SCROLL /*5*/:
+                if (overlayController != null) {
+                    overlayControllerVar = overlayController;
                     when = message.getWhen();
                     if (overlayControllerVar.mAcceptExternalMove) {
-                        overlayControllerVar.b(1, overlayControllerVar.unX, when);
+                        LogTool.log("MinusOneOverlayCallback.msg.endScroll");
+                        overlayControllerVar.dispatchTouchEvent(ACTION_UP, overlayControllerVar.eventX, when);
                     }
                     overlayControllerVar.mAcceptExternalMove = false;
                 }

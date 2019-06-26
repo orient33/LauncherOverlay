@@ -13,26 +13,31 @@ public class DrawerOverlayService extends Service {
 
     private OverlaysController overlaysController;
 
+    @Override
     public void onCreate() {
         super.onCreate();
-        this.overlaysController = new ConfigurationOverlayController(this);
+        overlaysController = new ConfigurationOverlayController(this);
     }
 
+    @Override
     public void onDestroy() {
-        this.overlaysController.onDestroy();
+        overlaysController.onDestroy();
         super.onDestroy();
     }
 
+    @Override
     public IBinder onBind(Intent intent) {
-        return this.overlaysController.onBind(intent);
+        return overlaysController.onBind(intent);
     }
 
+    @Override
     public boolean onUnbind(Intent intent) {
-        this.overlaysController.unUnbind(intent);
+        overlaysController.unUnbind(intent);
         return false;
     }
 
+    @Override
     protected void dump(FileDescriptor fileDescriptor, PrintWriter printWriter, String[] strArr) {
-        this.overlaysController.dump(printWriter);
+        overlaysController.dump(printWriter);
     }
 }

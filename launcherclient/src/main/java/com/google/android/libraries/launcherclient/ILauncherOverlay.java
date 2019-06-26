@@ -47,16 +47,15 @@ public interface ILauncherOverlay extends IInterface {
         static final int IS_VOICE_DETECTION_RUNNING_TRANSACTION = 12;
 
 
-        public static ILauncherOverlay asInterface(IBinder obj) {
+        static ILauncherOverlay asInterface(IBinder obj) {
             if (obj == null) {
                 return null;
             }
 
             IInterface iin = obj.queryLocalInterface(ILauncherOverlay.class.getName());
-            if (iin != null && iin instanceof ILauncherOverlay) {
+            if (iin instanceof ILauncherOverlay) {
                 return (ILauncherOverlay) iin;
-            }
-            else {
+            } else {
                 return new Proxy(obj);
             }
         }
@@ -87,9 +86,9 @@ public interface ILauncherOverlay extends IInterface {
                     }
 
                     windowAttached(
-                        layoutParams,
-                        ILauncherOverlayCallback.Stub.asInterface(data.readStrongBinder()),
-                        data.readInt()
+                            layoutParams,
+                            ILauncherOverlayCallback.Stub.asInterface(data.readStrongBinder()),
+                            data.readInt()
                     );
 
                     return true;

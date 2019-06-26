@@ -21,6 +21,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 public class LauncherClient {
+    private static final String TAG = "LauncherClient";
     private static AppServiceConnection sApplicationConnection;
 
     private final Activity mActivity;
@@ -33,7 +34,7 @@ public class LauncherClient {
     private int mServiceConnectionOptions;
     private final Intent mServiceIntent;
     private int mServiceStatus;
-    private int mState;
+    private int mState; // 0-未连接, 1-正在连接. 2-已连接到Service
     private final BroadcastReceiver mUpdateReceiver;
     private WindowManager.LayoutParams mWindowAttrs;
 
@@ -62,19 +63,20 @@ public class LauncherClient {
         reconnect();
     }
 
+    //使用这个可以 平滑显示 Google Now, (需要在Pixel手机, or PixelExperience 之类的ROM)
     public LauncherClient(Activity activity, LauncherClientCallbacks callbacks, boolean overlayEnabled) {
         this(activity, callbacks, "com.google.android.googlequicksearchbox", overlayEnabled);
     }
 
     private void applyWindowToken() {
         if (mOverlay == null) {
-            Log.e("LWQ","mOverlay == null");
+            Log.e(TAG, "applyWindowToken() . mOverlay == null");
             return;
         }
 
         try {
             if (mCurrentCallbacks == null) {
-                Log.e("LWQ","new OverlayCallbacks()");
+                Log.i(TAG, "new OverlayCallbacks()");
                 mCurrentCallbacks = new OverlayCallbacks();
             }
 
@@ -83,34 +85,33 @@ public class LauncherClient {
 
             if (mIsResumed) {
                 mOverlay.onResume();
-            }
-            else {
+            } else {
                 mOverlay.onPause();
             }
-        }
-        catch (RemoteException ignored) {
+        } catch (RemoteException ignored) {
 
         }
     }
 
     private boolean connectSafely(Context context, ServiceConnection conn, int flags) {
         try {
-            return context.bindService(mServiceIntent, conn, flags | Context.BIND_AUTO_CREATE);
-        }
-        catch (SecurityException e) {
-            Log.e("DrawerOverlayClient", "Unable to connect to overlay service");
+            boolean ok = context.bindService(mServiceIntent, conn, flags | Context.BIND_AUTO_CREATE);
+            Log.d(TAG, "bind service, success=" + ok + ", : " + mServiceIntent);
+            return ok;
+        } catch (SecurityException e) {
+            Log.e(TAG, "Unable to connect to overlay service");
             return false;
         }
     }
 
-    static Intent getServiceIntent(Context context, String targetPackage) {
+    private static Intent getServiceIntent(Context context, String targetPackage) {
         Uri uri = Uri.parse("app://" + context.getPackageName() + ":" + Process.myUid()).buildUpon()
-            .appendQueryParameter("v", Integer.toString(0))
-            .build();
+                .appendQueryParameter("v", Integer.toString(0))
+                .build();
 
         return new Intent("com.android.launcher3.WINDOW_OVERLAY")
-            .setPackage(targetPackage)
-            .setData(uri);
+                .setPackage(targetPackage)
+                .setData(uri);
     }
 
     private boolean isConnected() {
@@ -128,7 +129,11 @@ public class LauncherClient {
 
     private void removeClient(boolean removeAppConnection) {
         mDestroyed = true;
-        mActivity.unbindService(mServiceConnection);
+        try {
+            mActivity.unbindService(mServiceConnection);
+        } catch (IllegalArgumentException e) {
+            Log.d(TAG, "unbind fail. " + e);
+        }
         mActivity.unregisterReceiver(mUpdateReceiver);
 
         if (mCurrentCallbacks != null) {
@@ -146,12 +151,10 @@ public class LauncherClient {
         mWindowAttrs = windowAttrs;
         if (mWindowAttrs != null) {
             applyWindowToken();
-        }
-        else if (mOverlay != null) {
+        } else if (mOverlay != null) {
             try {
                 mOverlay.windowDetached(mActivity.isChangingConfigurations());
-            }
-            catch (RemoteException ignored) {
+            } catch (RemoteException ignored) {
 
             }
             mOverlay = null;
@@ -165,8 +168,7 @@ public class LauncherClient {
 
         try {
             mOverlay.endScroll();
-        }
-        catch (RemoteException ignored) {
+        } catch (RemoteException ignored) {
 
         }
     }
@@ -178,8 +180,7 @@ public class LauncherClient {
 
         try {
             mOverlay.closeOverlay(animate ? 1 : 0);
-        }
-        catch (RemoteException ignored) {
+        } catch (RemoteException ignored) {
 
         }
     }
@@ -213,8 +214,7 @@ public class LauncherClient {
         if (mOverlay != null && mWindowAttrs != null) {
             try {
                 mOverlay.onPause();
-            }
-            catch (RemoteException ignored) {
+            } catch (RemoteException ignored) {
 
             }
         }
@@ -230,8 +230,7 @@ public class LauncherClient {
         if (mOverlay != null && mWindowAttrs != null) {
             try {
                 mOverlay.onResume();
-            }
-            catch (RemoteException ignored) {
+            } catch (RemoteException ignored) {
 
             }
         }
@@ -279,8 +278,7 @@ public class LauncherClient {
 
         try {
             mOverlay.startScroll();
-        }
-        catch (RemoteException ignored) {
+        } catch (RemoteException ignored) {
 
         }
     }
@@ -292,17 +290,16 @@ public class LauncherClient {
 
         try {
             mOverlay.onScroll(progressX);
-        }
-        catch (RemoteException ignored) {
+        } catch (RemoteException ignored) {
 
         }
     }
 
 
     final class AppServiceConnection implements ServiceConnection {
-        public final String packageName;
+        final String packageName;
 
-        public AppServiceConnection(String pkg) {
+        AppServiceConnection(String pkg) {
             packageName = pkg;
         }
 
@@ -325,7 +322,7 @@ public class LauncherClient {
         private WindowManager mWindowManager;
         private int mWindowShift;
 
-        public OverlayCallbacks() {
+        OverlayCallbacks() {
             mWindowHidden = false;
             mUIHandler = new Handler(Looper.getMainLooper(), this);
         }
@@ -344,14 +341,14 @@ public class LauncherClient {
 
         public boolean handleMessage(Message msg) {
             if (mClient == null) {
-                Log.e("LWQ","mClient == null");
+                Log.e(TAG, "OverlayCallbacks. handleMessage. mClient == null");
                 return true;
             }
-            Log.e("LWQ","handleMessage:"+msg.what);
+            Log.e(TAG, "handleMessage:" + msg.what);
             switch (msg.what) {
                 case 2:
                     if ((mClient.mServiceStatus & 1) != 0) {
-                        Log.e("LWQ","(float) msg.obj:"+(float) msg.obj);
+                        Log.e(TAG, "(float) msg.obj:" + (float) msg.obj);
                         mClient.mLauncherClientCallbacks.onOverlayScrollChanged((float) msg.obj);
                     }
                     return true;
@@ -398,6 +395,7 @@ public class LauncherClient {
 
     private class OverlayServiceConnection implements ServiceConnection {
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "OverlayServiceConnection.onServiceConnected()");
             mState = 1;
             mOverlay = ILauncherOverlay.Stub.asInterface(service);
             if (mWindowAttrs != null) {
@@ -411,6 +409,5 @@ public class LauncherClient {
             notifyStatusChanged(0);
         }
     }
-
 
 }

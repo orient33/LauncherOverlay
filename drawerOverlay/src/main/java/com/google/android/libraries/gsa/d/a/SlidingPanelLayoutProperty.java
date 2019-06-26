@@ -2,17 +2,17 @@ package com.google.android.libraries.gsa.d.a;
 
 import android.util.Property;
 
-final class SlidingPanelLayoutProperty extends Property {
+final class SlidingPanelLayoutProperty extends Property<SlidingPanelLayout, Integer> {
 
-    SlidingPanelLayoutProperty(Class cls, String str) {
+    SlidingPanelLayoutProperty(Class<Integer> cls, String str) {
         super(cls, str);
     }
 
-    public final /* synthetic */ Object get(Object obj) {
-        return ((SlidingPanelLayout) obj).uoC;
+    public final /* synthetic */ Integer get(SlidingPanelLayout view) {
+        return view.panelX;
     }
 
-    public final /* synthetic */ void set(Object obj, Object obj2) {
-        ((SlidingPanelLayout) obj).BM((Integer) obj2);
+    public final /* synthetic */ void set(SlidingPanelLayout view, Integer value) {
+        view.setPanelX(value);
     }
 }

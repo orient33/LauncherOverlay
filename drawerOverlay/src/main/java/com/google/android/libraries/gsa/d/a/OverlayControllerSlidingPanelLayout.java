@@ -12,6 +12,7 @@ public final class OverlayControllerSlidingPanelLayout extends SlidingPanelLayou
         this.overlayController = overlayControllerVar;
     }
 
+    @Override
     protected final void determineScrollingStart(MotionEvent motionEvent, float f) {
         Object obj = 1;
         if (motionEvent.findPointerIndex(this.mActivePointerId) != -1) {
@@ -46,6 +47,7 @@ public final class OverlayControllerSlidingPanelLayout extends SlidingPanelLayou
         }
     }
 
+    @Override
     protected final boolean fitSystemWindows(Rect rect) {
         return !this.overlayController.unZ || super.fitSystemWindows(rect);
     }

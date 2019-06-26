@@ -33,9 +33,9 @@ public class SlidingPanelLayout extends FrameLayout {
     public int mTouchSlop;
     public int mTouchState = 0;
     public VelocityTracker mVelocityTracker;
-    public View uoA;
+    public View contentView;
     public View uoB;
-    public int uoC;
+    public int panelX;
     public float mPanelPositionRatio;
     public float uoE;
     public float uoF;
@@ -59,24 +59,24 @@ public class SlidingPanelLayout extends FrameLayout {
         this.mIsRtl = isRtl(getResources());
     }
 
-    public final void el(View view) {
-        this.uoA = view;
-        super.addView(this.uoA);
+    public final void addContentView(View view) {
+        contentView = view;
+        super.addView(contentView);
     }
 
-    final void BM(int i) {
+    final void setPanelX(int i) {
         if (i <= 1) {
             i = 0;
         }
         int measuredWidth = getMeasuredWidth();
         this.mPanelPositionRatio = ((float) i) / ((float) measuredWidth);
-        this.uoC = Math.max(Math.min(i, measuredWidth), 0);
-        this.uoA.setTranslationX(this.mIsRtl ? (float) (-this.uoC) : (float) this.uoC);
+        this.panelX = Math.max(Math.min(i, measuredWidth), 0);
+        this.contentView.setTranslationX(this.mIsRtl ? (float) (-this.panelX) : (float) this.panelX);
         if (uoK) {
-            this.uoA.setAlpha(Math.max(0.1f, this.decelerateInterpolator.getInterpolation(this.mPanelPositionRatio)));
+            this.contentView.setAlpha(Math.max(0.1f, this.decelerateInterpolator.getInterpolation(this.mPanelPositionRatio)));
         }
         if (this.uoH != null) {
-            this.uoH.D(this.mPanelPositionRatio);
+            this.uoH.overlayScrollChanged(this.mPanelPositionRatio);
         }
     }
 
@@ -129,15 +129,15 @@ public class SlidingPanelLayout extends FrameLayout {
                 float y = motionEvent.getY();
                 if (DEBUG) {
                     String valueOf = String.valueOf(motionEvent);
-                    Log.d("wo.SlidingPanelLayout", new StringBuilder(String.valueOf(valueOf).length() + 22).append("Intercept touch down: ").append(valueOf).toString());
+                    Log.d("wo.SlidingPanelLayout", "Intercept touch down: " + valueOf);
                 }
                 this.mDownX = x;
                 this.mDownY = y;
-                this.uoF = (float) this.uoC;
+                this.uoF = (float) this.panelX;
                 this.mLastMotionX = x;
                 this.mTotalMotionX = 0.0f;
                 this.mActivePointerId = motionEvent.getPointerId(0);
-                action = Math.abs(this.slidingPanelLayoutInterpolator.mFinalX - this.uoC);
+                action = Math.abs(this.slidingPanelLayoutInterpolator.mFinalX - this.panelX);
                 if (this.slidingPanelLayoutInterpolator.isFinished() || action < this.mTouchSlop / 3) {
                     z = true;
                 } else {
@@ -160,7 +160,7 @@ public class SlidingPanelLayout extends FrameLayout {
                     break;
                 }
                 break;
-            case com.google.android.libraries.material.progress.u.uKQ /*6*/:
+            case 6:
                 onSecondaryPointerUp(motionEvent);
                 releaseVelocityTracker();
                 break;
@@ -173,7 +173,7 @@ public class SlidingPanelLayout extends FrameLayout {
 
     public boolean onTouchEvent(MotionEvent motionEvent) {
         super.onTouchEvent(motionEvent);
-        if (this.uoA == null) {
+        if (this.contentView == null) {
             return super.onTouchEvent(motionEvent);
         }
         acquireVelocityTrackerAndAddMovement(motionEvent);
@@ -187,11 +187,11 @@ public class SlidingPanelLayout extends FrameLayout {
                 y = motionEvent.getY();
                 this.mDownX = x;
                 this.mDownY = y;
-                this.uoF = (float) this.uoC;
+                this.uoF = (float) this.panelX;
                 this.mLastMotionX = x;
                 this.mTotalMotionX = 0.0f;
                 this.mActivePointerId = motionEvent.getPointerId(0);
-                abs = Math.abs(this.slidingPanelLayoutInterpolator.mFinalX - this.uoC);
+                abs = Math.abs(this.slidingPanelLayoutInterpolator.mFinalX - this.panelX);
                 if (this.slidingPanelLayoutInterpolator.isFinished() || abs < this.mTouchSlop / 3) {
                     z = true;
                 } else {
@@ -223,7 +223,7 @@ public class SlidingPanelLayout extends FrameLayout {
                             closePanel(750);
                         }
                     } else {
-                        float measuredWidth = ((float) (getMeasuredWidth() / 2)) + (((float) Math.sin((double) ((float) (((double) (Math.min(1.0f, (((float) (abs < 0 ? this.uoC : getMeasuredWidth() - this.uoC)) * 1.0f) / ((float) getMeasuredWidth())) - 0.5f)) * 0.4712389167638204d)))) * ((float) (getMeasuredWidth() / 2)));
+                        float measuredWidth = ((float) (getMeasuredWidth() / 2)) + (((float) Math.sin((double) ((float) (((double) (Math.min(1.0f, (((float) (abs < 0 ? this.panelX : getMeasuredWidth() - this.panelX)) * 1.0f) / ((float) getMeasuredWidth())) - 0.5f)) * 0.4712389167638204d)))) * ((float) (getMeasuredWidth() / 2)));
                         if (abs > 0) {
                             z2 = true;
                         } else {
@@ -237,7 +237,7 @@ public class SlidingPanelLayout extends FrameLayout {
                         }
                     }
                 } else {
-                    if (this.uoC >= getMeasuredWidth() / 2) {
+                    if (this.panelX >= getMeasuredWidth() / 2) {
                         fv(750);
                     } else {//Todo: this else was not there initially
                         closePanel(750);
@@ -259,12 +259,12 @@ public class SlidingPanelLayout extends FrameLayout {
                     if (this.mIsRtl) {
                         y = -y;
                     }
-                    BM((int) (y + x));
+                    setPanelX((int) (y + x));
                     return true;
                 }
                 determineScrollingStart(motionEvent, 1.0f);
                 return true;
-            case com.google.android.libraries.material.progress.u.uKQ /*6*/:
+            case MotionEvent.ACTION_POINTER_UP://6:
                 onSecondaryPointerUp(motionEvent);
                 releaseVelocityTracker();
                 return true;
@@ -330,27 +330,27 @@ public class SlidingPanelLayout extends FrameLayout {
         if (this.uoB != null) {
             this.uoB.measure(MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(size2, MeasureSpec.EXACTLY));//Todo: i modified them, there was ints before instead of constants
         }
-        if (this.uoA != null) {
-            this.uoA.measure(MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(size2, MeasureSpec.EXACTLY));
+        if (this.contentView != null) {
+            this.contentView.measure(MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(size2, MeasureSpec.EXACTLY));
         }
         setMeasuredDimension(size, size2);
-        BM((int) (((float) size) * this.mPanelPositionRatio));
+        setPanelX((int) (((float) size) * this.mPanelPositionRatio));
     }
 
     protected void onLayout(boolean z, int i, int i2, int i3, int i4) {
         if (this.uoB != null) {
             this.uoB.layout(0, 0, this.uoB.getMeasuredWidth(), this.uoB.getMeasuredHeight());
         }
-        if (this.uoA != null) {
-            int measuredWidth = this.uoA.getMeasuredWidth();
-            int measuredHeight = this.uoA.getMeasuredHeight();
+        if (this.contentView != null) {
+            int measuredWidth = this.contentView.getMeasuredWidth();
+            int measuredHeight = this.contentView.getMeasuredHeight();
             int i5 = this.mIsRtl ? measuredWidth : -measuredWidth;
             if (this.mIsRtl) {
                 measuredWidth *= 2;
             } else {
                 measuredWidth = 0;
             }
-            this.uoA.layout(i5, 0, measuredWidth, measuredHeight);
+            this.contentView.layout(i5, 0, measuredWidth, measuredHeight);
         }
     }
 

@@ -43,7 +43,7 @@ final class OverlayControllerStateChanger implements t {
             overlayControllerVar.panelState = panelStateVar;
             overlayControllerVar.setState(overlayControllerVar.panelState);
         }
-        this.overlayController.setVisible(true);
+        this.overlayController.setTouchable(true);
         overlayControllerVar = this.overlayController;
         LayoutParams attributes = overlayControllerVar.window.getAttributes();
         if (Build.VERSION.SDK_INT >= 26) {
@@ -71,7 +71,7 @@ final class OverlayControllerStateChanger implements t {
             overlayControllerVar.panelState = panelStateVar;
             overlayControllerVar.setState(overlayControllerVar.panelState);
         }
-        this.overlayController.setVisible(false);
+        this.overlayController.setTouchable(false);
     }
 
     public final void open() {
@@ -83,11 +83,12 @@ final class OverlayControllerStateChanger implements t {
         }
     }
 
-    public final void D(float f) {
-        if (this.overlayController.uoa != null && !Float.isNaN(f)) {
+    @Override
+    public final void overlayScrollChanged(float f) {
+        if (this.overlayController.callback != null && !Float.isNaN(f)) {
             try {
-                this.overlayController.uoa.aK(f);
-                this.overlayController.D(f);
+                overlayController.callback.scrollChanged(f);
+                overlayController.afterReply(f);
             } catch (Throwable e) {
                 Log.e("wo.OverlayController", "Error notfying client", e);
             }

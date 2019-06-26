@@ -10,8 +10,22 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.WindowManager.LayoutParams;
 
-import com.google.android.libraries.i.LauncherOverlayInterfaceBinder;
-import com.google.android.libraries.i.d;
+import com.google.android.C;
+import com.google.android.libraries.launcherclient.LauncherOverlayInterfaceBinder;
+import com.google.android.libraries.launcherclient.ILauncherOverlayCallback;
+
+import static com.google.android.C.ARG1_OVERLAY_CLOSE;
+import static com.google.android.C.ARG1_OVERLAY_OPEN;
+import static com.google.android.C.ARG1_WINDOW_ATTACH;
+import static com.google.android.C.ARG1_WINDOW_DETACH;
+import static com.google.android.C.MSG_CREATE_DESTROY;
+import static com.google.android.C.MSG_END_SCROLL;
+import static com.google.android.C.MSG_LIFE_STATE;
+import static com.google.android.C.MSG_REQUEST_VOICE;
+import static com.google.android.C.MSG_START_SCROLL;
+import static com.google.android.C.MSG_ON_SCROLL;
+import static com.google.android.C.MSG_TOGGLE_OVERLAY;
+import static com.google.android.C.MSG_WINDOW;
 
 final class OverlayControllerBinder extends LauncherOverlayInterfaceBinder implements Runnable {
 
@@ -22,142 +36,143 @@ final class OverlayControllerBinder extends LauncherOverlayInterfaceBinder imple
     final int mServerVersion;
     final int mClientVersion;
     BaseCallback baseCallback = new BaseCallback();
-    private Handler mainThreadHandler = new Handler(Looper.getMainLooper(), this.baseCallback);
+    private Handler mainThreadHandler = new Handler(Looper.getMainLooper(), baseCallback);
     boolean mLastAttachWasLandscape;
 
-    public OverlayControllerBinder(OverlaysController overlaysControllerVar, int callerUid, String packageName, int serverVersion, int clientVersion) {
-        this.overlaysController = overlaysControllerVar;
-        this.mCallerUid = callerUid;
-        this.mPackageName = packageName;
-        this.mServerVersion = serverVersion;
-        this.mClientVersion = clientVersion;
+    OverlayControllerBinder(OverlaysController overlaysControllerVar, int callerUid, String packageName, int serverVersion, int clientVersion) {
+        overlaysController = overlaysControllerVar;
+        mCallerUid = callerUid;
+        mPackageName = packageName;
+        mServerVersion = serverVersion;
+        mClientVersion = clientVersion;
     }
 
-    private final void checkCallerId() {
-        if (Binder.getCallingUid() != this.mCallerUid) {
+    private void checkCallerId() {
+        if (Binder.getCallingUid() != mCallerUid) {
             //throw new RemoteException("Invalid client");
             throw new RuntimeException("Invalid client");//FIXME: modified, was remote exception and should still be one, realy have to change that
         }
     }
 
-    public final synchronized void cnK() {
+    public final synchronized void startScroll() {
         checkCallerId();
-        Message.obtain(this.mainThreadHandler, 3).sendToTarget();
+        Message.obtain(mainThreadHandler, MSG_START_SCROLL).sendToTarget();
     }
 
-    public final synchronized void aL(float f) {
+    public final synchronized void onScroll(float f) {
         checkCallerId();
-        Message.obtain(this.mainThreadHandler, 4, f).sendToTarget();
+        Message.obtain(mainThreadHandler, MSG_ON_SCROLL, f).sendToTarget();
     }
 
-    public final synchronized void cnL() {
+    public final synchronized void endScroll() {
         checkCallerId();
-        Message.obtain(this.mainThreadHandler, 5).sendToTarget();
+        Message.obtain(mainThreadHandler, MSG_END_SCROLL).sendToTarget();
     }
 
-    public final synchronized void a(LayoutParams layoutParams, d dVar, int clientOptions) {
+    @Override
+    public final synchronized void windowAttached(LayoutParams layoutParams, ILauncherOverlayCallback callback, int clientOptions) {
         Bundle bundle = new Bundle();
         bundle.putParcelable("layout_params", layoutParams);
         bundle.putInt("client_options", clientOptions);
-        a(bundle, dVar);
+        windowAttached(bundle, callback);
     }
 
-    public final synchronized void a(Bundle bundle, d dVar) {
+    @Override
+    public final synchronized void windowAttached(Bundle bundle, ILauncherOverlayCallback callback) {
         checkCallerId();
-        this.overlaysController.handler.removeCallbacks(this);
+        overlaysController.handler.removeCallbacks(this);
         Configuration configuration = bundle.getParcelable("configuration");
-        boolean z = configuration != null && configuration.orientation == 2;
-        this.mLastAttachWasLandscape = z;
-        BL(bundle.getInt("client_options", 7));
-        Message.obtain(this.mainThreadHandler, 0, 1, 0, Pair.create(bundle, dVar)).sendToTarget();
+        mLastAttachWasLandscape = configuration != null && configuration.orientation == Configuration.ORIENTATION_LANDSCAPE;
+        create(bundle.getInt("client_options", 7));
+        Message.obtain(mainThreadHandler, MSG_WINDOW, ARG1_WINDOW_ATTACH, 0, Pair.create(bundle, callback)).sendToTarget();
     }
 
-    public final synchronized void od(boolean z) {
+    @Override
+    public final synchronized void windowDetached(boolean delay) {
         checkCallerId();
-        Message.obtain(this.mainThreadHandler, 0, 0, 0).sendToTarget();
-        this.overlaysController.handler.postDelayed(this, z ? 5000 : 0);
+        Message.obtain(mainThreadHandler, MSG_WINDOW, ARG1_WINDOW_DETACH, 0).sendToTarget();
+        overlaysController.handler.postDelayed(this, delay ? 5000 : 0);
     }
 
-    public final synchronized void BJ(int i) {
+    @Override
+    public final synchronized void onLifeState(int i) {// 0-pause.. 2-?  3-resume
         checkCallerId();
-        this.mainThreadHandler.removeMessages(1);
+        mainThreadHandler.removeMessages(MSG_LIFE_STATE);
         if ((i & 2) == 0) {
-            this.mainThreadHandler.sendMessageDelayed(Message.obtain(this.mainThreadHandler, 1, i), 100);
+            mainThreadHandler.sendMessageDelayed(Message.obtain(mainThreadHandler, MSG_LIFE_STATE, i), 100);
         } else {
-            Message.obtain(this.mainThreadHandler, 1, i).sendToTarget();
+            Message.obtain(mainThreadHandler, MSG_LIFE_STATE, i).sendToTarget();
         }
     }
 
     public final synchronized void onPause() {
-        BJ(0);
+        onLifeState(C.LIFE_PAUSE);
     }
 
-    private final synchronized void BL(int i) {
+    private synchronized void create(int clientOption) {
         synchronized (this) {
-            int i2 = i & 15;
+            int i2 = clientOption & 0xF; // 15: 0xf
             if ((i2 & 1) != 0) {
                 i2 = 1;
             }
-            if (this.mOptions != i2) {
+            if (mOptions != i2) {
                 BaseCallback baseCallbackVar;
-                this.mainThreadHandler.removeCallbacksAndMessages(null);
-                Message.obtain(this.mainThreadHandler, 0, 0, 0).sendToTarget();
-                of(true);
-                this.mOptions = i2;
-                switch (this.mOptions) {
-                    case 1:
-                        baseCallbackVar = new MinusOneOverlayCallback(this.overlaysController, this);
-                        break;
-                    default:
-                        baseCallbackVar = new BaseCallback();
-                        break;
+                mainThreadHandler.removeCallbacksAndMessages(null);
+                Message.obtain(mainThreadHandler, MSG_WINDOW, ARG1_WINDOW_DETACH, 0).sendToTarget();
+                createOrDestroy(true);
+                mOptions = i2;
+                if (mOptions == 1) {
+                    baseCallbackVar = new MinusOneOverlayCallback(overlaysController, this);
+                } else {
+                    baseCallbackVar = new BaseCallback();
                 }
-                this.baseCallback = baseCallbackVar;
-                this.mainThreadHandler = new Handler(Looper.getMainLooper(), this.baseCallback);
+                baseCallback = baseCallbackVar;
+                mainThreadHandler = new Handler(Looper.getMainLooper(), baseCallback);
             }
         }
     }
 
     public final synchronized void onResume() {
-        BJ(3);
+        onLifeState(C.LIFE_RESUME);
     }
 
-    public final synchronized void fI(int i) {
+    @Override
+    public final synchronized void closeOverlay(int i) {
         checkCallerId();
-        this.mainThreadHandler.removeMessages(6);
-        Message.obtain(this.mainThreadHandler, 6, 0, i).sendToTarget();
+        mainThreadHandler.removeMessages(MSG_TOGGLE_OVERLAY);
+        Message.obtain(mainThreadHandler, MSG_TOGGLE_OVERLAY, ARG1_OVERLAY_CLOSE, i).sendToTarget();
     }
 
-    public final synchronized void BK(int i) {
+    @Override
+    public final synchronized void openOverlay(int i) {
         checkCallerId();
-        this.mainThreadHandler.removeMessages(6);
-        Message.obtain(this.mainThreadHandler, 6, 1, i).sendToTarget();
+        mainThreadHandler.removeMessages(MSG_TOGGLE_OVERLAY);
+        Message.obtain(mainThreadHandler, MSG_TOGGLE_OVERLAY, ARG1_OVERLAY_OPEN, i).sendToTarget();
     }
 
-    public final synchronized boolean a(byte[] bArr, Bundle bundle) {
-        Message.obtain(this.mainThreadHandler, 8, new ByteBundleHolder(bArr, bundle)).sendToTarget();
+    @Override
+    public final synchronized boolean isVoiceDetectionRunning(byte[] bArr, Bundle bundle) {
+        Message.obtain(mainThreadHandler, 8, new ByteBundleHolder(bArr, bundle)).sendToTarget();
         return true;
     }
 
-    public final synchronized void oe(boolean z) {
-        int i = 0;
+    @Override
+    public final synchronized void requestVoiceDetection(boolean z) {
         synchronized (this) {
             checkCallerId();
-            this.mainThreadHandler.removeMessages(7);
-            Handler handler = this.mainThreadHandler;
-            if (z) {
-                i = 1;
-            }
-            Message.obtain(handler, 7, i, 0).sendToTarget();
+            mainThreadHandler.removeMessages(MSG_REQUEST_VOICE);
+            Message.obtain(mainThreadHandler, MSG_REQUEST_VOICE, z ? 1 : 0, 0).sendToTarget();
         }
     }
 
-    public final String HB() {
-        return this.overlaysController.HA().HB();
+    @Override
+    public final String getVoiceSearchLanguage() {
+        return overlaysController.HA().HB();
     }
 
-    public final boolean HC() {
-        return this.overlaysController.HA().HC();
+    @Override
+    public final boolean isVoiceDetectionRunning() {
+        return overlaysController.HA().HC();
     }
 
     //Todo: always true, remove
@@ -170,27 +185,23 @@ final class OverlayControllerBinder extends LauncherOverlayInterfaceBinder imple
     }
 
     final void destroy() {
-        synchronized (this.overlaysController) {
-            this.overlaysController.handler.removeCallbacks(this);
-            of(false);
+        synchronized (overlaysController) {
+            overlaysController.handler.removeCallbacks(this);
+            createOrDestroy(false);
         }
     }
 
-    private final synchronized void of(boolean z) {
-        int i = 0;
+    private synchronized void createOrDestroy(boolean create) {
         synchronized (this) {
-            Handler handler = this.mainThreadHandler;
-            if (z) {
-                i = 1;
-            }
-            Message.obtain(handler, 2, i, 0).sendToTarget();
+            Handler handler = mainThreadHandler;
+            Message.obtain(handler, MSG_CREATE_DESTROY, create ? 1 : 0, 0).sendToTarget();
         }
     }
 
-    final void a(d dVar, int i) {
-        if (dVar != null) {
+    final void replay(ILauncherOverlayCallback ILauncherOverlayCallbackVar, int flag) {
+        if (ILauncherOverlayCallbackVar != null) {
             try {
-                dVar.BI(this.overlaysController.Hx() | i);
+                ILauncherOverlayCallbackVar.statusChanged(overlaysController.flag() | flag);
             } catch (Throwable e) {
                 Log.e("OverlaySController", "Failed to send status update", e);
             }
