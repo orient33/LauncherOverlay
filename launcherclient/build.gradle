@@ -1,0 +1,72 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+////建立一个task,名称为clearJar
+//task clearJar(type: Delete) {
+//    delete 'libs/sdk.jar'
+//}
+//
+//task makeJar(type: Jar) {
+//
+//    //指定生成的jar名
+//    baseName = "LauncherClient"
+//    appendix = ""
+//    version = "1.0"
+//    classifier = "release"
+//    //后缀名
+//    extension = "jar"
+//
+//    //最终的 Jar 包名，如果没设置archiveName，默认为 [baseName]-[appendix]-[version]-[classifier].[extension]
+////    archiveName = "LauncherClient-1.0-release.jar"
+//
+//    //从哪里打包class文件
+//    from('build/intermediates/packaged-classes/release/')
+//    //去掉不需要打包的目录和文件
+////    exclude('test/', 'BuildConfig.class', 'R.class')
+//    //去掉R$开头的文件
+////    exclude{ it.name.startsWith('R$');}
+//}
+////依赖build(build是一个自带的task)
+//makeJar.dependsOn(clearJar, build)
+
+
+task makeJar(type: Copy) {
+    def baseName = "LauncherClient"
+    def version = "1.0"
+    def classifier = "release"
+    def name = baseName + "-" + version + "-" + classifier //Library名称
+    from('build/intermediates/packaged-classes/release/') //从这个目录下取出默认jar包
+    into('libs/') //将jar包输出到指定目录下
+    include('classes.jar')
+    rename('classes.jar', name + '.jar') //自定义jar包的名字
+}
+makeJar.dependsOn(build)
